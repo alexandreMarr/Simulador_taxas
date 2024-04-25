@@ -2,7 +2,7 @@ import streamlit as st
 import function as fun
 
 # Configuração da página
-fun.config("","Tabela de Taxas")
+fun.config("wide","Tabela de Taxas")
 
 # Título da página
 st.title("")
@@ -48,7 +48,9 @@ def main():
                 
         else:
             # Se a adquirente for 'Adiq', exibe apenas filtro de MCC
-            filtros['mcc_filtrado'] = st.multiselect("Filtro MCC:", sorted(dados_do_banco_de_dados['mcc'].unique()), placeholder="MCC")
+            mcc_unique = dados_do_banco_de_dados['mcc'].dropna().unique()
+            filtros['mcc_filtrado'] = st.multiselect("Filtro MCC:", sorted(mcc_unique), placeholder="MCC")
+
             
 
     # Coluna para filtros de bandeira e tipo de parcelamento

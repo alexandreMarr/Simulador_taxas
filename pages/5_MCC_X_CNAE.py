@@ -2,7 +2,7 @@ import streamlit as st
 import function as fun
 
 # Configuração da página
-fun.config("","MCC X CNAE")
+fun.config("wide","MCC X CNAE")
 
 # Título da página
 st.title("")

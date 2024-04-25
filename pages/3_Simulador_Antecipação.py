@@ -2,13 +2,12 @@ import streamlit as st
 import function as fun
 
 # Configuração da página
-fun.config("","Simulador de Taxas")
 
+fun.config("","Simulador de Antecipação")
 
 # Título da página
 st.title("")
-st.header('Simulador de Taxas', divider='green')
-
+st.header('Simulador de Antecipação', divider='green')
 
 def main():
     # Dicionário com links de imagens das adquirentes
@@ -17,7 +16,8 @@ def main():
         'Getnet': 'https://i.ibb.co/CztNnM8/getnet.png'
     }
 
-    # Dividir a tela em duas colunas
+
+   # Dividir a tela em duas colunas
     link = False
     col1, col2, col3 = st.columns([3, 2, 5])
 
@@ -54,11 +54,18 @@ def main():
             # Selecionar MCC
             mcc_selecionado = st.selectbox("Selecione o MCC:", dados_mcc['mcc'].unique(), placeholder="MCC")
     
+    col1, col2 = st.columns([1,1])
+    with  col1:
+       valor = st.number_input("Valor a Antecipar:",min_value=0.00)
+    
+    with  col2:
+        taxa_antecipacao = st.number_input("Taxa de Antecipação:",min_value=0.00)
+        
     # Obter a descrição correspondente ao MCC selecionado
     descricao_mcc = dados_mcc[dados_mcc['mcc'] == mcc_selecionado]['descricao_mcc'].iloc[0]
     st.write("<b><b/>", descricao_mcc, unsafe_allow_html=True)
 
-    # Dicionário para armazenar os spreads inseridos pelo usuário
+       # Dicionário para armazenar os spreads inseridos pelo usuário
     spreads = {}
     
     # Colunas para entrada de spreads
@@ -75,11 +82,30 @@ def main():
         with col2:
             spreads['13X a 18X'] = st.number_input(f"Digite o spread para 13x a 18x:", min_value=0.0) 
     
-    # Calcular as taxas finais
-    taxas_finais = fun.calcular_taxas(mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa,link)
-
+    
+   # Calcular as taxas finais
+    taxas_finais = fun.calcular_taxas_antec(mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa,link)
+    
     # Exibir as taxas finais formatadas em uma tabela HTML
-    st.markdown(taxas_finais.to_html(escape=False), unsafe_allow_html=True)
+    st.markdown(fun.calcular_taxas(mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa,link).to_html(escape=False), unsafe_allow_html=True)
 
+    # Calcular a antecipação
+    antecipacao = fun.calcular_antecipacao(taxas_finais, taxa_antecipacao, valor, adiquirente_selecionado, tipo_taxa)
+    #sem_antecipacao = fun.calcular_sem_antecipacao(taxas_finais,valor,adiquirente_selecionado, tipo_taxa)
+    
+    # Exibir a antecipação formatada em uma tabela HTML
+    
+    
+    col1, col2, col3 = st.columns([1,10,1])
+
+    
+    with col2:
+        st.header('Com Antecipação', divider='green')
+        st.markdown(antecipacao.to_html(escape=False), unsafe_allow_html=True)
+    
+    
+
+   
+    
 if __name__ == "__main__":
     main()
