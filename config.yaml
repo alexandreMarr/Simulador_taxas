@@ -1,0 +1,51 @@
+cookie:
+  expiry_days: 1
+  key: random_signature_key
+  name: random_cookie_name
+credentials:
+  usernames:
+    alexandrealmeida:
+      email: alexandre.almeida@uzzipay.com
+      failed_login_attempts: 2
+      logged_in: false
+      name: Alexandre Almeida
+      nivel: admin_master
+      password: $2b$12$WM6zfxRbvuM9pJdGP8H5T.ic/nD6Q2GzOlfXBywhuUk6rLfyAXZ/e
+    cassiofranca:
+      email: cassio.franca@uzzipay.com
+      failed_login_attempts: 0
+      logged_in: false
+      name: cassio
+      nivel: user
+      password: $2b$12$cgTIj.AIBRasvQ/cDSk1W.OAhWhdK6HMH8waZk1LD36iX7bs/ipt2
+    igor:
+      email: igor.costa@uzzipay.com
+      failed_login_attempts: 0
+      logged_in: false
+      name: igor
+      nivel: admin
+      password: $2b$12$cgTIj.AIBRasvQ/cDSk1W.OAhWhdK6HMH8waZk1LD36iX7bs/ipt2
+    jsmith:
+      email: teste@gmail.com
+      failed_login_attempts: 0
+      logged_in: false
+      name: Teste
+      nivel: admin
+      password: $2b$12$sG04/5xiosUHrtCSvr.7nuwxrqRBcIMy0Ws2N9/wu4cwWDREgyQLK
+    lucas:
+      email: lucas.costa@uzzipay.com
+      failed_login_attempts: 0
+      logged_in: false
+      name: lucas
+      nivel: admin
+      password: $2b$12$MOb2Bsu45JuuzB8llOcHouy9GjuTepTg1YP5k20L4nKONLg93UlxW
+    rbriggs:
+      email: rbriggs@gmail.com
+      failed_login_attempts: 0
+      logged_in: false
+      name: Rebecca Briggs
+      nivel: user
+      password: $2b$12$L9Ru.jIv.Zp8yHk4KqJVJO8fviSJAROG3gOKYMuTbmS8dD/wNgaQm
+preauthorized:
+  emails:
+  - alexandre.almeida@uzzipay.com

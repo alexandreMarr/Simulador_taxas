@@ -1,0 +1,9 @@
+[client]
+caching = "browser"
+showSidebarNavigation = true
+
+
+[theme]
+base = "light"
+primaryColor = "#00D0FF"
+font = "sans serif"

@@ -1,0 +1,58 @@
+.st-emotion-cache-6qob1r {
+    background-color: #004AE6;
+}
+
+
+ .st-emotion-cache-pkbazv {
+    color: rgb(255, 255, 255);
+}
+
+.st-emotion-cache-17lntkn {
+    color: rgb(255, 255, 255);
+
+ 
+}
+.st-emotion-cache-1y4p8pa {
+    width: 100%;
+    padding: 0rem 0rem 0rem;
+    max-width: 50rem;
+}
+
+thead, tbody, tfoot, tr, td, th {
+    border-color: inherit;
+    border-style: solid;
+    border-width: 0px;
+    text-align: center;
+}
+
+.st-emotion-cache-1b5bib7 {
+    padding-left: 50px;
+}
+
+.st-emotion-cache-10rjk4g {
+    overflow: auto;
+    padding-top: 4rem;
+  
+}
+
+ 
+.st-emotion-cache-a18vdo{
+    position: fixed;
+    left: 100px;
+    bottom: 10px;
+ }  
+
+div[data-testid='stSidebarNav'] ul {max-height:none}
+
+.st-emotion-cache-vdokb0 th, .st-emotion-cache-vdokb0 td {
+    padding: 10px 33px;
+    border: 1px solid #17a2b86b;
+}
+
+.st-emotion-cache-1wmy9hl{
+    align-items: center;
+}
+
+.st-emotion-cache-d6uc01 {
+    width: 500px;
+}
