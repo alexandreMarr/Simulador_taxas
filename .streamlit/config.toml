@@ -5,5 +5,5 @@ showSidebarNavigation = true
 
 [theme]
 base = "light"
-primaryColor = "#00D0FF"
+primaryColor = "#004AE6"
 font = "sans serif"

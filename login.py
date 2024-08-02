@@ -3,7 +3,7 @@ import re
 import streamlit as st
 from controllers import controllerProposta
 import utils.sidebar as men
-import utils.main as main
+import utils.main as mains
 from views.Simulador import simulador, simulador_Avançado
 from views.Simulador_executivos import simulador_comercial
 from views.Tabela_de_Taxas import tabela_de_taxas
@@ -12,7 +12,7 @@ import streamlit_authenticator as stauth
 import utils.auth as at
 from streamlit_authenticator.utilities.exceptions import LoginError
 
-main.config("wide", "Simulador de Taxas")
+mains.config("wide", "Simulador de Taxas")
 def login(authenticator):
     try:
         nome, authentication_status, username, nivel = authenticator.login(

@@ -85,7 +85,8 @@ def formatacao_pivot(pivot_table):
     ]
     pivot_table_formatada = pivot_table_formatada.style.set_table_styles(styles)
    
-    return pivot_table_formatada  # Retorna a tabela pivot formatada
+    return pivot_table_formatada
+
 
 def formatacao_pivot_antecipacao(pivot_table):
     """

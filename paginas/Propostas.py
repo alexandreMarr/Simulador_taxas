@@ -25,31 +25,50 @@ def login(authenticator):
         st.error(e)
     return nome, authentication_status, username, nivel
 
-def bory(nivel):
+def bory(nivel, name):
+    
     st.header('Propostas', divider='blue')
 
     col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
     filtros = {}
     propostas_db = confBD.carregar_dados_propostas()
+    
+        # Verifica o nível de acesso
+    if nivel == "user":
+        # Filtra o DataFrame para mostrar apenas propostas do nome_executivo correspondente
+        propostas_filtradas = propostas_db[propostas_db['nome_executivo'] == name]
+    else:
+        # Caso o usuário não seja de nível "user", mostra todas as propostas
+        propostas_filtradas = propostas_db
 
     with col1:
-        filtros['razao_social'] = st.multiselect("Razão Social:", sorted(propostas_db['razao_social'].unique()), placeholder="Razão Social", key="Razao_social")
+        filtros['razao_social'] = st.multiselect("Razão Social:", sorted(propostas_filtradas['razao_social'].unique()), placeholder="Razão Social", key="Razao_social")
 
     with col2:
-        filtros['cnpj'] = st.multiselect("CNPJ:", sorted(propostas_db['cnpj'].unique()), placeholder="cnpj", key="cnpj")
+        filtros['cnpj'] = st.multiselect("CNPJ:", sorted(propostas_filtradas['cnpj'].unique()), placeholder="cnpj", key="cnpj")
 
-    with col3:
-        filtros['nome_executivo'] = st.multiselect("Executivo:", sorted(propostas_db['nome_executivo'].unique()), placeholder="Executivo", key="execuivo")
+    if nivel == 'user':
+        filtros['nome_executivo'] = ''
+        with col3:
+            filtros['data_geracao'] = st.date_input("Data Geração:",value=None, format='DD/MM/YYYY')
+    else:
+        with col3:
+            filtros['nome_executivo'] = st.multiselect("Executivo:", sorted(propostas_filtradas['nome_executivo'].unique()), placeholder="Executivo", key="execuivo")
 
-    with col4:
-        filtros['data_geracao'] = st.date_input("Data Geração:",value=None, format='DD/MM/YYYY')
+        with col4:
+            filtros['data_geracao'] = st.date_input("Data Geração:",value=None, format='DD/MM/YYYY')
 
     st.divider()
     
-    col1, col2 = st.columns([1,9])
-
+    col1, col2 = st.columns([2,8])
+    
     with col1:
-        id = st.selectbox('ID da Proposta',propostas_db['id'], key='selectbox_id')
+
+        # Gera a lista de IDs filtrados
+        ids_filtrados = propostas_filtradas['id']
+
+        # Cria o selectbox com a lista de IDs filtrados
+        id = st.selectbox('ID da Proposta', ids_filtrados, key='selectbox_id')
      
     with col2:
         st.write('')
@@ -58,7 +77,7 @@ def bory(nivel):
             
 
 
-    propostas = controllerProposta.carregar_tabela(filtros, propostas_db)
+    propostas = controllerProposta.carregar_tabela(filtros, propostas_db, nivel, name)
 
     # Aplicar o estilo ao DataFrame
     tabela_estilizada = controllerProposta.estilo_personalizado(propostas)
@@ -75,7 +94,7 @@ def main():
     men.menu(authenticator)
 
     if authentication_status:
-        bory(nivel)
+        bory(nivel,nome)
     elif authentication_status is False:
         st.error('Usuário ou Senha Incorretos')
     elif authentication_status is None:

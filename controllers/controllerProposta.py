@@ -377,17 +377,23 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs):
 
     return final_buffer
 
-def carregar_tabela(filtros, dataset):
+def carregar_tabela(filtros, dataset, nivel, name):
     """
     Carrega a tabela de propostas com base nos filtros especificados.
 
     Args:
         filtros (dict): Dicionário contendo os filtros a serem aplicados.
         dataset (DataFrame): DataFrame contendo os dados das propostas.
+        nivel (str): Nível do usuário, que define a visibilidade dos dados.
+        name (str): Nome do executivo, usado para filtrar os dados se necessário.
 
     Returns:
         DataFrame: Tabela formatada com as propostas.
     """
+    
+    # Verifica se o nível é "user" e aplica o filtro por nome_executivo
+    if nivel == "user":
+        dataset = dataset[dataset['nome_executivo'] == name]
 
     # Aplica filtros no DataFrame conforme os filtros fornecidos
     if filtros['razao_social']:
@@ -404,9 +410,10 @@ def carregar_tabela(filtros, dataset):
         data_geracao_str = filtros['data_geracao'].strftime('%Y-%m-%d')
 
         dataset = dataset[dataset['data_geracao'] == data_geracao_str]
-        
-    
+
     dataset = dataset.reset_index(drop=True)
+
+    # Formata as colunas de taxas
     dataset['taxa_pix'] = (
         dataset['taxa_pix']
         .astype(float)  # Converte para float
@@ -419,6 +426,7 @@ def carregar_tabela(filtros, dataset):
         .apply(lambda x: f"R$ {x:.2f}")  # Formata cada elemento como string
     )
     
+    # Novo nome das colunas
     novo_nome_colunas = {
         'id': 'ID',
         'razao_social': 'Razão Social',
@@ -431,6 +439,7 @@ def carregar_tabela(filtros, dataset):
         'data_vencimento': 'Data de Validade',
         'nome_executivo': 'Executivo',
     }
+    
     # Renomeia as colunas do DataFrame
     dataset = dataset.rename(columns=novo_nome_colunas)
 
