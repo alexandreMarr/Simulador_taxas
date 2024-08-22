@@ -34,7 +34,6 @@ thead, tbody, tfoot, tr, td, th {
     padding-top: 4rem;
   
 }
-
  
 .st-emotion-cache-a18vdo{
     position: fixed;
@@ -49,10 +48,36 @@ div[data-testid='stSidebarNav'] ul {max-height:none}
     border: 1px solid #17a2b86b;
 }
 
-.st-emotion-cache-1wmy9hl{
+/* [data-testid="stAppViewBlockContainer"] {
+    min-width: auto;
+    max-width: 550px;
+} */
+
+.st-emotion-cache-1wmy9hl {
+    /* display: flex; */
+    /* flex-direction: column;
+    flex: 1 1 0%; */
     align-items: center;
 }
 
 .st-emotion-cache-d6uc01 {
+    width: 550px;
+}
+
+.st-emotion-cache-1vq5yym {
+    width: 550px;
+    /* position: relative; */
+
+}
+.st-emotion-cache-v7uy5k {
     width: 500px;
+ 
+}
+.st-emotion-cache-1gqizhl {
+    width: 500px;
+
+}
+.st-emotion-cache-1p2qugw {
+    left: 80px;
+    position: absolute;
 }

@@ -1,5 +1,6 @@
 import pandas as pd
 import streamlit as st
+import utils.conexaoBD as confBD
 
 
 # Função para carregar os URLs das imagens das bandeiras de cartão de crédito
@@ -15,11 +16,11 @@ def carregar_urls_das_bandeiras():
     data = {
         'BANDEIRA': ['MASTERCARD', 'VISA','ELO', 'AMEX', 'HIPERCARD'],
         'URL_IMAGEM': [
-            'https://i.ibb.co/nRVzTQS/mastercard.png',
-            'https://i.ibb.co/HtmwvpD/logo-visa.png',
-            'https://i.ibb.co/GMXwsVF/elo.png',
-            'https://i.ibb.co/QPYY0K6/amex.png',
-            'https://i.ibb.co/N9cxwTD/hiper.png'
+            'http://172.18.37.58/Simulador_taxas/imagens/master.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
         ]
     }
     return pd.DataFrame(data)  # Retorna os dados como DataFrame
@@ -88,39 +89,6 @@ def formatacao_pivot(pivot_table):
     return pivot_table_formatada
 
 
-def formatacao_pivot_antecipacao(pivot_table):
-    """
-    Realiza a formatação da tabela pivot retornados da base.
-   
-    Args:
-       pivot_table (array:float): Dados finas para retornar na tabela.
-
-    Returns:
-        pivot_table_formatada: Tabela formatada com as taxas finais.
-    """
-    pivot_table.columns = pivot_table.columns.to_series().astype(str)
-    ordem_desejada = ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX']
-    ordem_desejada = [bandeira for bandeira in ordem_desejada if bandeira in pivot_table.columns]
-    pivot_table = pivot_table.reindex(columns=ordem_desejada)
-    pivot_table.rename(index={1: 'CRÉDITO', 2: '2X', 3: '3X', 4: '4X', 5: '5X', 6: '6X', 7: '7X', 8: '8X', 9: '9X', 10: '10X', 11: '11X', 12: '12X', 13: '13X', 14: '14X', 15: '15X', 16: '16X', 17: '17X', 18: '18X'}, inplace=True)
-
-    def formatar_percentagem(elemento):
-        if isinstance(elemento, (int, float)):
-            return f"{elemento:.2f}%"  
-        else:
-            return elemento
-
-    pivot_table_formatada = pivot_table.applymap(formatar_percentagem)
-
-    bandeiras_df = carregar_urls_das_bandeiras()
-
-    for bandeira in pivot_table_formatada.columns:
-        if bandeira in bandeiras_df['BANDEIRA'].values:
-            url_imagem = bandeiras_df[bandeiras_df['BANDEIRA'] == bandeira]['URL_IMAGEM'].iloc[0]
-            pivot_table_formatada.rename(columns={bandeira: f'<img src="{url_imagem}" alt="{bandeira}" style="width:70px;height:40px; text-align: center;">'}, inplace=True)
-
-    return pivot_table_formatada  
-
 
 def exibir_bandeiras_com_inputs(bandeiras, parcelamentos, bandeiras_df, spreads):
     ordem_desejada_bandeira = ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX']
@@ -132,7 +100,8 @@ def exibir_bandeiras_com_inputs(bandeiras, parcelamentos, bandeiras_df, spreads)
     for bandeira in bandeiras:
         for parcelamento in parcelamentos:
             spread_key = f"{bandeira}_{parcelamento}_spread"
-            spreads[spread_key] = 0.0
+            spreads.setdefault(spread_key, 0.00)  # Use setdefault para evitar KeyError
+
 
     cols = st.columns(5)
     col_idx = 0
@@ -157,17 +126,19 @@ def exibir_bandeiras_com_inputs(bandeiras, parcelamentos, bandeiras_df, spreads)
     st.write("")
 
 
-def exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos, bandeiras_df, spreads):
+def exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos, bandeiras_df, spreads,check_desconto):
     ordem_desejada_bandeira = ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX']
     ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 18X']
     bandeiras = [p for p in ordem_desejada_bandeira if p in bandeiras]
     parcelamentos = [p for p in ordem_desejada_parcelamento if p in parcelamentos]
+    config = confBD.carregar_dados_config()
+    
     
     # Inicializar todas as chaves no dicionário spreads com valor padrão
     for bandeira in bandeiras:
-        for parcelamento in parcelamentos:
-            spread_key = f"{bandeira}_{parcelamento}_spreads"
-            spreads[spread_key] = 0.0
+            for parcelamento in parcelamentos:
+                spread_key = f"{bandeira}_{parcelamento}_spreads"
+                spreads.setdefault(spread_key, 0.00)  # Use setdefault para evitar KeyError
 
     cols = st.columns(5)
     col_idx = 0
@@ -186,8 +157,24 @@ def exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos, bandeiras_d
                 if (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or (bandeira == 'AMEX' and parcelamento == 'DÉBITO'):
                     continue
                 spread_key = f"{bandeira}_{parcelamento}_spreads"
-                spreads[spread_key] = st.number_input(parcelamento, min_value=0.0, key=spread_key)
+                if check_desconto == True:
+                    spreads[spread_key] = st.number_input(parcelamento,value=0.0, min_value=-config.loc[0, "desconto"], key=spread_key)
+                else:
+                    spreads[spread_key] = st.number_input(parcelamento, value=0.0, min_value=0.00, key=spread_key)
         col_idx += 1
 
     st.write("")
+
+def exibir_checkboxes_parcelamentos(parcelamentos,  unique_id=""):
+    checkboxes = {}
+    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 18X']
+    parcelamentos = [p for p in ordem_desejada_parcelamento if p in parcelamentos]
+    
+    cols = st.columns(len(parcelamentos))
+    
+    for idx, parcelamento in enumerate(parcelamentos):
+        with cols[idx]:
+            checkboxes[parcelamento] = st.checkbox(parcelamento, value=True, key=f"checkbox_{parcelamento}_{unique_id}")
+    
+    return checkboxes
 

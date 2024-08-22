@@ -4,7 +4,7 @@ import streamlit as st
 import utils.conexaoBD as confBD
 from sqlalchemy.orm import sessionmaker
 import controllers.controllerGlobal as ControllerGlobal
-from sqlalchemy import Text, create_engine, Table as SQLTable, Column, Integer, String, Float, DateTime, MetaData, ForeignKey
+from sqlalchemy import Text, create_engine, Table as SQLTable, Column, Integer, String, Float, DateTime, MetaData, ForeignKey, Boolean
 from datetime import date
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
@@ -20,7 +20,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
 
-def salvar(antecipacao, mcc_selecionado, taxas_finais):
+def salvar(antecipacao, mcc_selecionado, taxas_finais, desconto):
             response = ""
             st.write(f"Digite os dados do Cliente")
             col1, col2 = st.columns([1, 1])
@@ -63,14 +63,14 @@ def salvar(antecipacao, mcc_selecionado, taxas_finais):
                         st.error("CNPJ é obrigatório")
                     else:
                         cnpj_formatado = formatar_cnpj(cnpj)
-                        response = salvar_proposta(razao_social, cnpj_formatado, aluguel, pix, data_atual, data_validade, st.session_state['name'], antecipacao, mcc_selecionado, taxas_finais,col2,obs)
+                        response = salvar_proposta(razao_social, cnpj_formatado, aluguel, pix, data_atual, data_validade, st.session_state['name'], antecipacao, mcc_selecionado, taxas_finais,col2,obs,desconto)
     
             if response == "":
                 st.write()
             else:
                 st.success(response)
            
-def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade, username, antecipacao, mcc, pivot_table_styler,col2,obs):
+def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade, username, antecipacao, mcc, pivot_table_styler,col2,obs,desconto):
      # Conectar ao banco de dados
      engine = confBD.conectar_banco_de_dados()
      Session = sessionmaker(bind=engine)
@@ -89,7 +89,8 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
                        Column('data_geracao', String),
                        Column('data_vencimento', String),
                        Column('nome_executivo', String),
-                       Column('observacao', Text))
+                       Column('observacao', Text),
+                       Column('desconto', Boolean))
    
      # Definir a tabela mdr_propostas
      mdr_propostas = SQLTable('mdr_propostas', metadata,
@@ -110,11 +111,11 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
      bandeiras_df = pd.DataFrame({
          'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
          'URL_IMAGEM': [
-             'https://i.ibb.co/nRVzTQS/mastercard.png',
-             'https://i.ibb.co/HtmwvpD/logo-visa.png',
-             'https://i.ibb.co/GMXwsVF/elo.png',
-             'https://i.ibb.co/QPYY0K6/amex.png',
-             'https://i.ibb.co/N9cxwTD/hiper.png'
+            'http://172.18.37.58/Simulador_taxas/imagens/master.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
+            'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
          ]
      })
      # Substituir URLs de volta pelos nomes das bandeiras
@@ -158,7 +159,8 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
              data_geracao=data_atual,
              data_vencimento=data_validade,
              nome_executivo=username,
-             observacao=obs
+             observacao=obs,
+             desconto=desconto
          )
        
          # Executar a inserção e obter o ID da nova proposta
@@ -206,7 +208,7 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
          'tipo_taxa_antecipacao': tipo_taxa_antecipacao
      }
    # Gere o PDF e obtenha o buffer
-     pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table,username,obs)
+     pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table,username,obs,desconto)
     
      with col2:
         # Exiba o PDF no Streamlit
@@ -233,7 +235,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib import colors
 
 
-def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs):
+def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
     # Carregar o papel timbrado
     papel_timbrado_path = 'Papel Timbrado - Rovema Bank.pdf'
     papel_timbrado = PdfReader(papel_timbrado_path)
@@ -275,7 +277,6 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs):
         # Adicionar parágrafo ao frame
         frame.addFromList([p], c)
 
-
     # Taxa de antecipação
     if taxas['tipo_taxa_antecipacao'] == "Automática":
         c.drawString(75, height - 290, 'X')
@@ -295,6 +296,9 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs):
         taxa_pix = f"{taxas['pix']:.2f}%"
         c.drawString(337, height - 268, taxa_pix)
 
+    if desconto == True:
+        c.setFillColor(colors.rgb2cmyk(255,0,0))
+        c.drawString(155, height - 646, 'Desconto exclusivo válido até a data de vencimento da proposta.')
     
     c.setFillColor(colors.white)
     # Desenhar strings com a cor branca
@@ -305,12 +309,14 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs):
 
      # Mapear bandeiras para URLs de imagem
     bandeira_imagens = {
-        'MASTERCARD': 'https://i.ibb.co/nRVzTQS/mastercard.png',
-        'VISA': 'https://i.ibb.co/HtmwvpD/logo-visa.png',
-        'ELO': 'https://i.ibb.co/GMXwsVF/elo.png',
-        'AMEX': 'https://i.ibb.co/QPYY0K6/amex.png',
-        'HIPERCARD': 'https://i.ibb.co/N9cxwTD/hiper.png'
+         'MASTERCARD':'http://172.18.37.58/Simulador_taxas/imagens/master.png',
+            'VISA':'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
+            'ELO':  'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
+            'AMEX':'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
+            'HIPERCARD': 'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
     }
+    
+            
 
     # Preparar os dados da tabela sem adicionar o cabeçalho textual
     data = pivot_table.reset_index().values.tolist()
@@ -515,12 +521,12 @@ def buscar_dados_pdf(id):
             bandeiras_df = pd.DataFrame({
                 'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
                 'URL_IMAGEM': [
-                    'https://i.ibb.co/nRVzTQS/mastercard.png',
-                    'https://i.ibb.co/HtmwvpD/logo-visa.png',
-                    'https://i.ibb.co/GMXwsVF/elo.png',
-                    'https://i.ibb.co/QPYY0K6/amex.png',
-                    'https://i.ibb.co/N9cxwTD/hiper.png'
-                ]
+                    'http://172.18.37.58/Simulador_taxas/imagens/master.png',
+                    'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
+                    'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
+                    'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
+                    'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
+            ]
             })
             # Substituir URLs de volta pelos nomes das bandeiras
             colunas_bandeiras = pivot_table.columns
@@ -546,6 +552,7 @@ def buscar_dados_pdf(id):
             # Formatar para DD/MM/YYYY
             data_validade_formatada = data_validade_date.strftime('%d/%m/%Y')
             
+            desconto = proposta.iloc[0]['desconto']
             # Extrair os dados da proposta
             dados_cliente = {
                 'razao_social': proposta.iloc[0]['razao_social'],
@@ -563,7 +570,7 @@ def buscar_dados_pdf(id):
             obs = proposta.iloc[0]['observacao']
             
             # Gerar PDF com dados
-            pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table, proposta.iloc[0]['nome_executivo'], obs)
+            pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table, proposta.iloc[0]['nome_executivo'], obs,desconto)
             
             return st.download_button(
                     label="Baixar PDF",

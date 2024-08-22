@@ -42,7 +42,7 @@ def esqueci_senha(authenticator):
             email_of_forgotten_password,
             new_random_password) = authenticator.forgot_password(fields={'Form name':'Restaurar Senha Usuário','Username':'Usuário', 'Submit':'Gerar Nova Senha'})
         if username_of_forgotten_password:
-            st.success('Nova senha gerada com Sucesso:',new_random_password)
+            st.success(f'Nova senha gerada com sucesso: {new_random_password}')
             # Random password to be transferred to the user securely
         elif not username_of_forgotten_password:
             st.error('Usuário Não Encontrado')

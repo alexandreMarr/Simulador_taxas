@@ -5,7 +5,7 @@ import controllers.controllerGlobal as ControllerGlobal
 
 
 # Função para calcular as taxas finais
-def calcular_taxas(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa, link,antecipacao):
+def calcular_taxas(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa, link, antecipacao, parcelamentos_selecionados):
     """
     Calcula as taxas finais para a adquirente especificada.
 
@@ -16,44 +16,55 @@ def calcular_taxas(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa
         dados_do_banco_de_dados (DataFrame): DataFrame contendo os dados do banco de dados.
         tipo_taxa (str): Tipo de taxa, usado apenas quando a adquirente não é 'Adiq'.
         link (bool): Indica se a taxa de link de pagamento deve ser adicionada.
+        antecipacao (list): Lista com informações sobre antecipação.
+        parcelamentos_selecionados (list): Lista de parcelamentos selecionados nos checkboxes.
 
     Returns:
         DataFrame: Tabela formatada com as taxas finais.
     """
     config = confBD.carregar_dados_config()
-    custo = config.loc[0,'custo']
-    custo_valor = config.loc[0,'valor_custo']
+    custo = config.loc[0, 'custo']
+    custo_valor = config.loc[0, 'valor_custo']
     tipo_intercambio = config.loc[0, 'tipo_intercambio']
-    taxa_link_adiq = config.loc[0,'taxa_link_pagamento_adiq']
-    
-    # Filtrar dados do banco de dados pelo MCC
+    taxa_link_adiq = config.loc[0, 'taxa_link_pagamento_adiq']
+
+    # Filtrar dados do banco de dados pelo MCC e tipo de taxa
     if adiquirente == 'Adiq':
         dados_filtrados = dados_do_banco_de_dados[dados_do_banco_de_dados['mcc'] == mcc]
         pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values=tipo_intercambio, aggfunc='mean')
     else:
-        dados_filtrados = dados_do_banco_de_dados[(dados_do_banco_de_dados['mcc'] == mcc) & (dados_do_banco_de_dados['tipo_taxa'] == tipo_taxa)]
+        dados_filtrados = dados_do_banco_de_dados[
+            (dados_do_banco_de_dados['mcc'] == mcc) & 
+            (dados_do_banco_de_dados['tipo_taxa'] == tipo_taxa)
+        ]
         pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values='intercambio_mediano', aggfunc='mean')
-    
+
+    # Filtrar o pivot_table para exibir apenas os parcelamentos selecionados
+    pivot_table = pivot_table.loc[pivot_table.index.intersection(parcelamentos_selecionados)]
+
     # Adicionar o spread digitado pelo usuário aos valores de intercâmbio mediano
     for tipo_parcelamento in pivot_table.index:
         pivot_table.loc[tipo_parcelamento] += spreads[tipo_parcelamento]
-       
+
+    # Adicionar spreads específicos e outros custos se aplicável
     if adiquirente == 'Adiq':
         for tipo_parcelamento in pivot_table.index:
             for bandeira in pivot_table.columns:
-                dados_filtrados_atual = dados_filtrados[(dados_filtrados['Bandeira'] == bandeira) & (dados_filtrados['Parcelamento'] == tipo_parcelamento)]
+                dados_filtrados_atual = dados_filtrados[
+                    (dados_filtrados['Bandeira'] == bandeira) & 
+                    (dados_filtrados['Parcelamento'] == tipo_parcelamento)
+                ]
                 if not dados_filtrados_atual.empty:
                     pivot_table.loc[tipo_parcelamento, bandeira] += dados_filtrados_atual['plusprice'].values[0]
-    
+
     if custo:
         for tipo_parcelamento in pivot_table.index:
-            pivot_table.loc[tipo_parcelamento] += custo_valor             
-    
+            pivot_table.loc[tipo_parcelamento] += custo_valor
+
     if link:
         for tipo_parcelamento in pivot_table.index:
             pivot_table.loc[tipo_parcelamento] += taxa_link_adiq
-    
-    
+
     # Retorna a tabela pivot formatada
     return ControllerGlobal.formatacao_pivot(pivot_table)
 
@@ -153,113 +164,8 @@ def carregar_tabela_mcc_cnae(dataset, filtro):
 
     return dataset
 
-def calcular_taxas_antec(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa, link):
-    """
-    Calcula as taxas finais para a adquirente especificada.
 
-    Args:
-        mcc (int): Código do MCC.
-        adiquirente (str): Nome da adquirente (por exemplo, 'Adiq' ou 'Getnet').
-        spreads (dict): Dicionário contendo os spreads para cada tipo de parcelamento.
-        dados_do_banco_de_dados (DataFrame): DataFrame contendo os dados do banco de dados.
-        tipo_taxa (str): Tipo de taxa, usado apenas quando a adquirente não é 'Adiq'.
-
-    Returns:
-        DataFrame: Tabela formatada com as taxas finais.
-    """
-    # Carrega os dados de configuração do banco de dados
-    config = confBD.carregar_dados_config()
-    
-    # Obtém as configurações relevantes do banco de dados
-    custo = config.loc[0, 'custo']
-    custo_valor = config.loc[0, 'valor_custo']
-    tipo_intercambio = config.loc[0, 'tipo_intercambio']
-    taxa_link_adiq = config.loc[0, 'taxa_link_pagamento_adiq']
-    
-    # Filtra os dados do banco de dados pelo MCC e pelo tipo de taxa
-    if adiquirente == 'Adiq':
-        dados_filtrados = dados_do_banco_de_dados[dados_do_banco_de_dados['mcc'] == mcc]
-        pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values=tipo_intercambio, aggfunc='mean')
-    else:
-        dados_filtrados = dados_do_banco_de_dados[(dados_do_banco_de_dados['mcc'] == mcc) & (dados_do_banco_de_dados['tipo_taxa'] == tipo_taxa)]
-        pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values='intercambio_mediano', aggfunc='mean')
-    
-    # Adiciona o spread digitado pelo usuário aos valores de intercâmbio mediano
-    for tipo_parcelamento in pivot_table.index:
-        pivot_table.loc[tipo_parcelamento] += spreads[tipo_parcelamento]
-       
-    # Adiciona o valor de plusprice aos valores de intercâmbio mediano, se aplicável
-    if adiquirente == 'Adiq':
-        for tipo_parcelamento in pivot_table.index:
-            for bandeira in pivot_table.columns:
-                dados_filtrados_atual = dados_filtrados[(dados_filtrados['Bandeira'] == bandeira) & (dados_filtrados['Parcelamento'] == tipo_parcelamento)]
-                if not dados_filtrados_atual.empty:
-                    pivot_table.loc[tipo_parcelamento, bandeira] += dados_filtrados_atual['plusprice'].values[0]
-    
-    # Adiciona o custo fixo, se aplicável
-    if custo:
-        for tipo_parcelamento in pivot_table.index:
-            pivot_table.loc[tipo_parcelamento] += custo_valor             
-    
-    # Adiciona a taxa de link de pagamento, se aplicável
-    if link:
-        for tipo_parcelamento in pivot_table.index:
-            pivot_table.loc[tipo_parcelamento] += taxa_link_adiq
-            
-    # Retorna a tabela pivot formatada
-    return pivot_table
-
-
-
-def calcular_antecipacao(taxas_cartao, taxa_antecipacao, valor_bruto, adiquirente, tipo_taxa):
-    """
-    Calcula a antecipação de valores de transações de cartão de crédito.
-
-    Parâmetros:
-        taxas_cartao (DataFrame): DataFrame contendo as taxas de intercâmbio por bandeira e tipo de parcelamento.
-        taxa_antecipacao (float): Taxa de antecipação a ser aplicada sobre o valor bruto da transação.
-        valor_bruto (float): Valor bruto da transação.
-        adiquirente (str): Nome da adquirente.
-        tipo_taxa (str): Tipo de taxa de antecipação.
-
-    Retorna:
-        DataFrame: DataFrame contendo os valores antecipados por bandeira e número de parcelas.
-    """
-    # Mapear cada intervalo de parcelamento para o número de parcelas
-    intervalo_para_parcelas = {
-        'CRÉDITO': [1],
-        '2X a 6X': list(range(2, 7)),
-        '7X a 12X': list(range(7, 13))
-    }
-    tam = 11
-    if adiquirente == 'Getnet' and tipo_taxa == 'SEM ANTECIPAÇÃO':
-        intervalo_para_parcelas = {
-        'CRÉDITO': [1],
-        '2X a 6X': list(range(2, 7)),
-        '7X a 12X': list(range(7, 13)),
-        '13X a 18X': list(range(13, 19))
-        }
-        tam = 17
-    
-    # Criar um DataFrame para armazenar os resultados
-    antecipacao = pd.DataFrame(index=list(range(1, tam)), columns=taxas_cartao.columns)
-    
-    # Calcular o valor antecipado para cada tipo de parcelamento e bandeira
-    for parcelamento in intervalo_para_parcelas:
-        num_parcelas = intervalo_para_parcelas[parcelamento]
-        for bandeira in antecipacao.columns:
-            for i in num_parcelas:
-                # Calcular o valor líquido da parcela
-                valor_liquido = round(valor_bruto - (valor_bruto * ((taxas_cartao.loc[parcelamento, bandeira] + taxa_antecipacao) / 100)),2)
-                taxa_final = round(taxas_cartao.loc[parcelamento, bandeira] + taxa_antecipacao,2)
-                            
-                # Armazenar o valor final na tabela de antecipação
-                antecipacao.loc[i, bandeira] = f"R${valor_liquido}<br>{taxa_final}%"
-    
-    return ControllerGlobal.formatacao_pivot_antecipacao(antecipacao)
-
-
-def calcular_taxas_avançado(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa, link, antecipacao):
+def calcular_taxas_avançado(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa, link, antecipacao,parcelamentos_selecionados):
     config = confBD.carregar_dados_config()
     custo = config.loc[0,'custo']
     custo_valor = config.loc[0,'valor_custo']
@@ -272,6 +178,9 @@ def calcular_taxas_avançado(mcc, adiquirente, spreads, dados_do_banco_de_dados,
     else:
         dados_filtrados = dados_do_banco_de_dados[(dados_do_banco_de_dados['mcc'] == mcc) & (dados_do_banco_de_dados['tipo_taxa'] == tipo_taxa)]
         pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values='intercambio_mediano', aggfunc='mean')
+    
+     # Filtrar o pivot_table para exibir apenas os parcelamentos selecionados
+    pivot_table = pivot_table.loc[pivot_table.index.intersection(parcelamentos_selecionados)]
     
     for tipo_parcelamento in pivot_table.index:
         for bandeira in pivot_table.columns:
@@ -297,60 +206,46 @@ def calcular_taxas_avançado(mcc, adiquirente, spreads, dados_do_banco_de_dados,
     return ControllerGlobal.formatacao_pivot(pivot_table)
 
 
-def calcular_taxas_executivos(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa,antecipacao):
-     """
-     Calcula as taxas finais para a adquirente especificada.
-     Args:
-         mcc (int): Código do MCC.
-         adiquirente (str): Nome da adquirente (por exemplo, 'Adiq' ou 'Getnet').
-         spreads (dict): Dicionário contendo os spreads para cada tipo de parcelamento.
-         dados_do_banco_de_dados (DataFrame): DataFrame contendo os dados do banco de dados.
-         tipo_taxa (str): Tipo de taxa, usado apenas quando a adquirente não é 'Adiq'.
-         link (bool): Indica se a taxa de link de pagamento deve ser adicionada.
-     Returns:
-         DataFrame: Tabela formatada com as taxas finais.
-     """
-     config = confBD.carregar_dados_config()
-     custo = config.loc[0,'custo']
-     custo_valor = config.loc[0,'valor_custo']
-     tipo_intercambio = config.loc[0, 'tipo_intercambio']
-     taxa_link_adiq = config.loc[0,'taxa_link_pagamento_adiq']
-     
-     # Carregar os spreads comerciais do banco de dados
-     spreads_comercial = confBD.carregar_dados_spread_comercial()
-     
-     # Filtrar dados do banco de dados pelo MCC
-     if adiquirente == 'Adiq':
-         dados_filtrados = dados_do_banco_de_dados[dados_do_banco_de_dados['mcc'] == mcc]
-         pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values=tipo_intercambio, aggfunc='mean')
-     else:
-         dados_filtrados = dados_do_banco_de_dados[(dados_do_banco_de_dados['mcc'] == mcc) & (dados_do_banco_de_dados['tipo_taxa'] == tipo_taxa)]
-         pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values='intercambio_mediano', aggfunc='mean')
+def calcular_taxas_executivos(mcc, adiquirente, spreads, dados_do_banco_de_dados, tipo_taxa, antecipacao, parcelamentos_selecionados):
+    config = confBD.carregar_dados_config()
+    custo = config.loc[0,'custo']
+    custo_valor = config.loc[0,'valor_custo']
+    tipo_intercambio = config.loc[0, 'tipo_intercambio']
+    
+    spreads_comercial = confBD.carregar_dados_spread_comercial()
+    
+    if adiquirente == 'Adiq':
+        dados_filtrados = dados_do_banco_de_dados[dados_do_banco_de_dados['mcc'] == mcc]
+        pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values=tipo_intercambio, aggfunc='mean')
+    else:
+        dados_filtrados = dados_do_banco_de_dados[(dados_do_banco_de_dados['mcc'] == mcc) & (dados_do_banco_de_dados['tipo_taxa'] == tipo_taxa)]
+        pivot_table = dados_filtrados.pivot_table(index='Parcelamento', columns='Bandeira', values='intercambio_mediano', aggfunc='mean')
    
-     for tipo_parcelamento in pivot_table.index:
+    for tipo_parcelamento in pivot_table.index:
         for bandeira in pivot_table.columns:
             spread_key = f"{bandeira}_{tipo_parcelamento}_spreads"
-            pivot_table.loc[tipo_parcelamento, bandeira] += spreads[spread_key]
-                 
-     # Adicionar os spreads comerciais do banco de dados
-     for tipo_parcelamento in pivot_table.index:
-         for bandeira in pivot_table.columns:
-             spread_comercial = spreads_comercial.loc[
-                 (spreads_comercial['bandeira'] == bandeira) & (spreads_comercial['parcelamento'] == tipo_parcelamento), 'spread']
-             if not spread_comercial.empty:
-                 pivot_table.loc[tipo_parcelamento, bandeira] += spread_comercial.values[0]
-           
-     if adiquirente == 'Adiq':
-         for tipo_parcelamento in pivot_table.index:
-             for bandeira in pivot_table.columns:
-                 dados_filtrados_atual = dados_filtrados[(dados_filtrados['Bandeira'] == bandeira) & (dados_filtrados['Parcelamento'] == tipo_parcelamento)]
-                 if not dados_filtrados_atual.empty:
-                     pivot_table.loc[tipo_parcelamento, bandeira] += dados_filtrados_atual['plusprice'].values[0]
-                   
-     if custo:
-         for tipo_parcelamento in pivot_table.index:
-             pivot_table.loc[tipo_parcelamento] += custo_valor 
-             
-           
-     # Retorna a tabela pivot formatada
-     return ControllerGlobal.formatacao_pivot(pivot_table)
+            pivot_table.loc[tipo_parcelamento, bandeira] += spreads.get(spread_key, 0)
+    
+    for tipo_parcelamento in pivot_table.index:
+        for bandeira in pivot_table.columns:
+            spread_comercial = spreads_comercial.loc[
+                (spreads_comercial['bandeira'] == bandeira) & (spreads_comercial['parcelamento'] == tipo_parcelamento), 'spread']
+            if not spread_comercial.empty:
+                pivot_table.loc[tipo_parcelamento, bandeira] += spread_comercial.values[0]
+    
+    if adiquirente == 'Adiq':
+        for tipo_parcelamento in pivot_table.index:
+            for bandeira in pivot_table.columns:
+                dados_filtrados_atual = dados_filtrados[(dados_filtrados['Bandeira'] == bandeira) & (dados_filtrados['Parcelamento'] == tipo_parcelamento)]
+                if not dados_filtrados_atual.empty:
+                    pivot_table.loc[tipo_parcelamento, bandeira] += dados_filtrados_atual['plusprice'].values[0]
+    
+    if custo:
+        for tipo_parcelamento in pivot_table.index:
+            pivot_table.loc[tipo_parcelamento] += custo_valor 
+    
+    # Filtrar os parcelamentos para incluir apenas aqueles que foram selecionados
+    pivot_table = pivot_table.loc[parcelamentos_selecionados]
+    
+    return ControllerGlobal.formatacao_pivot(pivot_table)
+

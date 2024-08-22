@@ -113,7 +113,7 @@ def paramentros():
 
 def Parametros_spreed_comercial():
     st.header('Parâmetros', divider='blue')
-
+    config = confDB.carregar_dados_config()
     # Carregar dados
     spreads_comercial = confDB.carregar_dados_spread_comercial()
     bandeiras_df = controllerGlobal.carregar_urls_das_bandeiras()
@@ -148,8 +148,9 @@ def Parametros_spreed_comercial():
                  (spreads_comercial['bandeira'] == bandeira) & (spreads_comercial['parcelamento'] == parcelamento), 'spread'].item()
                 spreads[spread_key] = st.number_input(parcelamento, min_value=0.0, key=spread_key, value=valor_spread)
         col_idx += 1
-
-    st.write("")
+    valor_db_desconto = config.loc[0, "desconto"]
+    desconto = st.number_input(f"Margem de Desconto", value=valor_db_desconto, min_value=0.0, key='vl_margem_desconto')
+    config.loc[0, "desconto"] = desconto
 
     if st.button("Salvar", key='Salvar_spreads',type='primary'):
         # Converter o dicionário spreads para DataFrame
@@ -166,6 +167,7 @@ def Parametros_spreed_comercial():
 
         # Salvar no banco de dados
         ControllerConfiguracoes.salvar_dados_spreed_comercial(spreads_comercial)
+        ControllerConfiguracoes.atualizar_dados_config(config)
 
-        st.success("Spreads Aplicados com Sucesso!")
+        st.success("Parâmetros Aplicados com Sucesso!")
 

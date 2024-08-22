@@ -8,7 +8,7 @@ def simulador():
     st.header('Simulador de Taxas', divider='blue')
     config = confBD.carregar_dados_config()
     dados_mcc = confBD.carregar_dados_mcc()
-
+    desconto = False
     # Dicionário com links de imagens das adquirentes
     data = {
         'Adiq': 'https://i.ibb.co/0XnDtz7/adiq.png',
@@ -84,15 +84,23 @@ def simulador():
         with col2:
             spreads['13X a 18X'] = st.number_input(f"Digite o spread para 13x a 18x:", min_value=0.0, key="13x_18x_spread")
 
-    # Calcular as taxas finais
-    taxas_finais = controllerSimulador.calcular_taxas(mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa, link,antecipacao)
+    parcelamentos = dados_do_banco_de_dados['Parcelamento'].unique()
+    # Obtenha os parcelamentos selecionados
+    parcelamentos_selecionados = [parcelamento for parcelamento, selecionado in controllerGlobal.exibir_checkboxes_parcelamentos(parcelamentos, unique_id="simulador_1").items() if selecionado]
 
-    # Exibir as taxas finais formatadas em uma tabela HTML
+    # Calcular as taxas finais
+    taxas_finais = controllerSimulador.calcular_taxas(
+        mcc_selecionado, adiquirente_selecionado, spreads, 
+        dados_do_banco_de_dados, tipo_taxa, link, antecipacao, 
+        parcelamentos_selecionados
+    )
+
+    # Exibir as taxas finais formatadas
     st.markdown(taxas_finais.to_html(escape=False), unsafe_allow_html=True)
     
     @st.experimental_dialog("Salvar Proposta")
     def modal_controller():
-        controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais)
+        controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais, desconto)
     
     if st.button('Gerar Proposta',type='primary',key='simulador'):
         modal_controller()
@@ -103,7 +111,7 @@ def simulador_Avançado():
     st.header('Simulador de Taxas Avançado', divider='blue')
     config = confBD.carregar_dados_config()
     dados_mcc = confBD.carregar_dados_mcc()
-
+    desconto = False
     # Dicionário com links de imagens das adquirentes
     data = {
         'Adiq': 'https://i.ibb.co/0XnDtz7/adiq.png',
@@ -165,16 +173,32 @@ def simulador_Avançado():
     bandeiras_df = controllerGlobal.carregar_urls_das_bandeiras()
     bandeiras = dados_do_banco_de_dados['Bandeira'].unique()
     parcelamentos = dados_do_banco_de_dados['Parcelamento'].unique()
-      
-    controllerGlobal.exibir_bandeiras_com_inputs(bandeiras, parcelamentos, bandeiras_df, spreads)
-
-    taxas_finais = controllerSimulador.calcular_taxas_avançado(mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa, link,antecipacao)
-
-    st.markdown(taxas_finais.to_html(escape=False), unsafe_allow_html=True)
     
-    @st.experimental_dialog("Salvar Proposta")
-    def modal_controller():
-        controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais)
+     # Exibir checkboxes para cada parcelamento
+    checkboxes = controllerGlobal.exibir_checkboxes_parcelamentos(parcelamentos,unique_id="simulador_avançado")
+
+    # Filtrar parcelamentos baseados nos checkboxes selecionados
+    parcelamentos_selecionados = [p for p in parcelamentos if checkboxes[p]]
     
-    if st.button('Gerar Proposta',type='primary', key='simulador_avançados'):
-        modal_controller()
+    if parcelamentos_selecionados:
+        controllerGlobal.exibir_bandeiras_com_inputs(bandeiras, parcelamentos_selecionados, bandeiras_df, spreads)
+
+        taxas_finais = controllerSimulador.calcular_taxas_avançado(mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa, link,antecipacao,parcelamentos_selecionados)
+
+        st.markdown(taxas_finais.to_html(escape=False), unsafe_allow_html=True)
+        
+        @st.experimental_dialog("Salvar Proposta")
+        def modal_controller():
+            controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais,desconto)
+        
+        if st.button('Gerar Proposta',type='primary', key='simulador_avançados'):
+            modal_controller()
+        
+    else:
+        st.warning("Nenhum parcelamento selecionado.") 
+ 
+
+   
+
+    
+       
