@@ -1,11 +1,13 @@
 import pandas as pd
 import streamlit as st
 import utils.conexaoBD as confBD
-
+import os
+from dotenv import load_dotenv
 
 # Função para carregar os URLs das imagens das bandeiras de cartão de crédito
 @st.cache_resource
 def carregar_urls_das_bandeiras():
+    load_dotenv()
     """
     Carrega os URLs das imagens das bandeiras de cartão de crédito.
 
@@ -14,15 +16,18 @@ def carregar_urls_das_bandeiras():
     """
     # Dicionário contendo os URLs das imagens das bandeiras
     data = {
-        'BANDEIRA': ['MASTERCARD', 'VISA','ELO', 'AMEX', 'HIPERCARD'],
-        'URL_IMAGEM': [
-            'http://172.18.37.58/Simulador_taxas/imagens/master.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
-        ]
+    'BANDEIRA': ['MASTERCARD', 'VISA','ELO', 'AMEX', 'HIPERCARD'],
+    'URL_IMAGEM': [
+        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
+    ]
     }
+
+
+
     return pd.DataFrame(data)  # Retorna os dados como DataFrame
 
 # Função para formatar uma tabela pivot

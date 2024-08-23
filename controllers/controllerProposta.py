@@ -1,3 +1,4 @@
+import os
 from tkinter.ttk import Frame
 import pandas as pd
 import streamlit as st
@@ -18,7 +19,7 @@ import re
 import tkinter.font as TkFont
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-
+from dotenv import load_dotenv
 
 def salvar(antecipacao, mcc_selecionado, taxas_finais, desconto):
             response = ""
@@ -111,11 +112,11 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
      bandeiras_df = pd.DataFrame({
          'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
          'URL_IMAGEM': [
-            'http://172.18.37.58/Simulador_taxas/imagens/master.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
-            'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
+             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
          ]
      })
      # Substituir URLs de volta pelos nomes das bandeiras
@@ -309,11 +310,11 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
 
      # Mapear bandeiras para URLs de imagem
     bandeira_imagens = {
-         'MASTERCARD':'http://172.18.37.58/Simulador_taxas/imagens/master.png',
-            'VISA':'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
-            'ELO':  'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
-            'AMEX':'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
-            'HIPERCARD': 'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
+         'MASTERCARD': f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
+            'VISA': f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
+            'ELO':   f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
+            'AMEX': f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
+            'HIPERCARD':  f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
     }
     
             
@@ -521,11 +522,11 @@ def buscar_dados_pdf(id):
             bandeiras_df = pd.DataFrame({
                 'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
                 'URL_IMAGEM': [
-                    'http://172.18.37.58/Simulador_taxas/imagens/master.png',
-                    'http://172.18.37.58/Simulador_taxas/imagens/visa.png',
-                    'http://172.18.37.58/Simulador_taxas/imagens/elo.png',
-                    'http://172.18.37.58/Simulador_taxas/imagens/amex.png',
-                    'http://172.18.37.58/Simulador_taxas/imagens/hiper.png'
+                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
             ]
             })
             # Substituir URLs de volta pelos nomes das bandeiras
