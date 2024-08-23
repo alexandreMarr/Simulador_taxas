@@ -178,3 +178,29 @@ def exibir_checkboxes_parcelamentos(parcelamentos,  unique_id=""):
     
     return checkboxes
 
+def footer():
+    footer = """
+    <style>
+  
+
+    .footer {
+        width: 100%;
+        background-color: white;
+        color: black;
+        text-align: center;
+        padding: 10px 0;
+        position: relative;
+    
+    }
+
+    
+    </style>
+    <div class="footer">
+    <p>© 2024 <a style='display: inline; text-align: center;' href="https://rovemabank.com.br/" target="_blank">Rovema Bank</a> Todos os direitos reservados.</p>
+    </div>
+    """
+
+    st.markdown(footer, unsafe_allow_html=True)
+
+
+

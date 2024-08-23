@@ -97,7 +97,7 @@ def simulador():
 
     # Exibir as taxas finais formatadas
     st.markdown(taxas_finais.to_html(escape=False), unsafe_allow_html=True)
-    
+    st.write()
     @st.experimental_dialog("Salvar Proposta")
     def modal_controller():
         controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais, desconto)

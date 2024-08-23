@@ -2,6 +2,7 @@ from datetime import date
 import re
 import streamlit as st
 from controllers import controllerProposta
+from controllers import controllerGlobal
 import utils.sidebar as men
 import utils.main as mains
 from views.Simulador import simulador, simulador_Avançado
@@ -50,7 +51,7 @@ def main():
 
     if authentication_status:
         inicial_bar(nivel)
-
+        controllerGlobal.footer()
     elif authentication_status is False:
         st.error('Usuário ou Senha Incorretos')
     elif authentication_status is None:
@@ -60,3 +61,5 @@ at.update_config()
 
 if __name__ == "__main__":
     main()
+
+

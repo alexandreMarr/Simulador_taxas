@@ -81,3 +81,16 @@ div[data-testid='stSidebarNav'] ul {max-height:none}
     left: 80px;
     position: absolute;
 }
+
+
+[data-testid="stAppViewBlockContainer"] {
+    padding: 6rem 5rem 0rem;
+}
+
+.st-emotion-cache-40pabj {
+    width: 500px;
+}
+.st-emotion-cache-1mcei62 {
+    width: 500px;
+
+}

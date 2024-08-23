@@ -1,7 +1,7 @@
 from datetime import time
 import random
 import streamlit as st
-from controllers import controllerProposta
+from controllers import controllerGlobal, controllerProposta
 import utils.sidebar as men
 import utils.main as main
 from views.Paramentros import paramentros, Parametros_spreed_comercial
@@ -95,6 +95,7 @@ def main():
 
     if authentication_status:
         bory(nivel,nome)
+        controllerGlobal.footer()
     elif authentication_status is False:
         st.error('Usuário ou Senha Incorretos')
     elif authentication_status is None:
