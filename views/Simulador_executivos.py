@@ -53,7 +53,6 @@ def simulador_comercial():
         # Exibir bandeiras e inputs somente para os parcelamentos selecionados
         controllerGlobal.exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos_selecionados, bandeiras_df, spreads, check_desconto)
 
-        print(parcelamentos_selecionados)
         taxas_finais = controllerSimulador.calcular_taxas_executivos(
             mcc_selecionado, adiquirente_selecionado, spreads, dados_do_banco_de_dados, tipo_taxa, antecipacao, parcelamentos_selecionados
         )

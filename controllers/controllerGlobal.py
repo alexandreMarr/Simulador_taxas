@@ -18,11 +18,11 @@ def carregar_urls_das_bandeiras():
     data = {
     'BANDEIRA': ['MASTERCARD', 'VISA','ELO', 'AMEX', 'HIPERCARD'],
     'URL_IMAGEM': [
-        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
-        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
-        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
-        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
-        f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
+        f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
+        f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
     ]
     }
 
@@ -71,8 +71,8 @@ def formatacao_pivot(pivot_table):
             return elemento
 
     # Aplicar a formatação à tabela
-    pivot_table_formatada = pivot_table.applymap(formatar_percentagem)
-
+    pivot_table_formatada = pivot_table.map(formatar_percentagem)
+    
     # Carregar os URLs das imagens das bandeiras
     bandeiras_df = carregar_urls_das_bandeiras()
     

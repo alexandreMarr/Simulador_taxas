@@ -11,7 +11,7 @@ def menu(authenticator):
                     Page("login.py", "Simulador", ":heavy_division_sign:"),
                     Page("paginas/Configurações.py", "Configurações", ":gear:"),
                     Page("paginas/Users.py", "Usuário", ":male-office-worker:"),
-                     Page("paginas/Propostas.py", "Propostas", ":page_facing_up:"),
+                    Page("paginas/Propostas.py", "Propostas", ":page_facing_up:"),
                 ]
             )  
             authenticator.logout('Sair', 'sidebar')

@@ -112,11 +112,11 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
      bandeiras_df = pd.DataFrame({
          'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
          'URL_IMAGEM': [
-             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
-             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
-             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
-             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
-             f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
+             f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
          ]
      })
      # Substituir URLs de volta pelos nomes das bandeiras
@@ -310,11 +310,11 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
 
      # Mapear bandeiras para URLs de imagem
     bandeira_imagens = {
-         'MASTERCARD': f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
-            'VISA': f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
-            'ELO':   f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
-            'AMEX': f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
-            'HIPERCARD':  f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
+         'MASTERCARD': f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
+            'VISA': f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
+            'ELO':   f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
+            'AMEX': f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
+            'HIPERCARD':  f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
     }
     
             
@@ -517,16 +517,17 @@ def buscar_dados_pdf(id):
             pivot_table = mdr_proposta.pivot_table(index='tipo_parcelamento', columns='bandeira', values='taxa', aggfunc='mean')
             pivot_table = ControllerGlobal.formatacao_pivot(pivot_table)
             pivot_table = pivot_table.data
-
+            
+            
              # Carregar o DataFrame de bandeiras para mapear URLs de volta para os nomes das bandeiras
             bandeiras_df = pd.DataFrame({
                 'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
                 'URL_IMAGEM': [
-                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/master.png',
-                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/visa.png',
-                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/elo.png',
-                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/amex.png',
-                     f'{os.getenv("URL_SERVER_IMAGENS")}imagens/hiper.png'
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
             ]
             })
             # Substituir URLs de volta pelos nomes das bandeiras

@@ -109,7 +109,7 @@ def carregar_tabela_taxas(adiquirente, dataset, filtros):
             return elemento
 
     # Aplicar a formatação à tabela
-    dataset = dataset.applymap(formatar_percentagem)
+    dataset = dataset.map(formatar_percentagem)
     
     novo_nome_colunas = {
         'Bandeira': 'Bandeira',
