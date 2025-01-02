@@ -48,6 +48,7 @@ def simulador_comercial():
 
     # Filtrar parcelamentos baseados nos checkboxes selecionados
     parcelamentos_selecionados = [p for p in parcelamentos if checkboxes[p]]
+    print(parcelamentos_selecionados)
 
     if parcelamentos_selecionados:
         # Exibir bandeiras e inputs somente para os parcelamentos selecionados
@@ -63,8 +64,13 @@ def simulador_comercial():
         @st.experimental_dialog("Salvar Proposta")
         def modal_controller():
             controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais, check_desconto)
-
+        
+        st.write(" ")
         if st.button('Gerar Proposta', type='primary', key='simulador_executivos'):
             modal_controller()
     else:
         st.warning("Nenhum parcelamento selecionado.")
+    
+    
+    if "13X a 21X" in parcelamentos_selecionados:
+        st.warning("#Aceitamos a bandeira HiperCard com opção de parcelamento em até 20x no crédito.")

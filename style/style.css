@@ -1,46 +1,23 @@
+/* Menu */
 .st-emotion-cache-6qob1r {
     background-color: #004AE6;
 }
-
-
+ /* menu - text color - Botão select */
  .st-emotion-cache-pkbazv {
     color: rgb(255, 255, 255);
 }
 
+ /* menu - text color - Botão  */
 .st-emotion-cache-17lntkn {
     color: rgb(255, 255, 255);
-
- 
-}
-.st-emotion-cache-1y4p8pa {
-    width: 100%;
-    padding: 0rem 0rem 0rem;
-    max-width: 50rem;
 }
 
-thead, tbody, tfoot, tr, td, th {
-    border-color: inherit;
-    border-style: solid;
-    border-width: 0px;
-    text-align: center;
-}
-
-.st-emotion-cache-1b5bib7 {
-    padding-left: 50px;
-}
-
+ /* menu - logo */
 .st-emotion-cache-10rjk4g {
     overflow: auto;
     padding-top: 4rem;
-  
 }
- 
-.st-emotion-cache-a18vdo{
-    position: fixed;
-    left: 100px;
-    bottom: 10px;
- }  
-
+ /* menu - full  */
 div[data-testid='stSidebarNav'] ul {max-height:none}
 
 .st-emotion-cache-vdokb0 th, .st-emotion-cache-vdokb0 td {
@@ -48,49 +25,35 @@ div[data-testid='stSidebarNav'] ul {max-height:none}
     border: 1px solid #17a2b86b;
 }
 
-/* [data-testid="stAppViewBlockContainer"] {
-    min-width: auto;
-    max-width: 550px;
-} */
-
-.st-emotion-cache-1wmy9hl {
-    /* display: flex; */
-    /* flex-direction: column;
-    flex: 1 1 0%; */
-    align-items: center;
-}
-
-.st-emotion-cache-d6uc01 {
-    width: 550px;
-}
-
-.st-emotion-cache-1vq5yym {
-    width: 550px;
-    /* position: relative; */
-
-}
-.st-emotion-cache-v7uy5k {
-    width: 500px;
- 
-}
-.st-emotion-cache-1gqizhl {
-    width: 500px;
-
-}
-.st-emotion-cache-1p2qugw {
-    left: 80px;
-    position: absolute;
-}
-
-
 [data-testid="stAppViewBlockContainer"] {
     padding: 6rem 5rem 0rem;
 }
 
-.st-emotion-cache-40pabj {
-    width: 500px;
+/* Tabela de taxas */
+thead, tbody, tfoot, tr, td, th {
+    border-color: inherit;
+    border-style: solid;
+    border-width: 0px;
+    text-align: center;
 }
-.st-emotion-cache-1mcei62 {
-    width: 500px;
 
+/* Bordas separadas */
+table {
+    caption-side: bottom;
+    border-collapse: separate;
+} 
+
+/* alinha a tabela de taxa; */
+.st-emotion-cache-vdokb0 {
+    font-family: "Source Sans Pro", sans-serif;
+    margin-bottom: -1rem;
+    display: grid;
+}
+
+/* Login */
+.st-emotion-cache-r421ms {
+    border: 1px solid rgba(49, 51, 63, 0.2);
+    border-radius: 0.5rem;
+    padding: calc(1em - 1px);
+    width: 500px;
 }

@@ -16,7 +16,7 @@ def atualizar_dados_config(config):
         None
     """
     # Conectar ao banco de dados PostgreSQL
-    engine = confBD.conectar_banco_de_dados()
+    engine = confBD.conectar_banco_de_dados_engine()
 
     # Nome da tabela no banco de dados
     tabela = 'config'
@@ -29,7 +29,7 @@ def atualizar_dados_config(config):
         
 
 def salvar_dados_spreed_comercial(df):
-    engine = confBD.conectar_banco_de_dados()  # Certifique-se de que confBD.conectar_banco_de_dados() retorna uma URL de conexão válida do SQLAlchemy
+    engine = confBD.conectar_banco_de_dados_engine()  # Certifique-se de que confBD.conectar_banco_de_dados() retorna uma URL de conexão válida do SQLAlchemy
     metadata = MetaData()
 
     # Refletir a tabela existente no banco de dados

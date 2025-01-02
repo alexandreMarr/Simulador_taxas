@@ -1,14 +1,13 @@
 import streamlit as st
 from controllers import controllerGlobal
 import utils.sidebar as men
-import utils.main as main
+import utils.main as mains
 import views.user as user
 
 import streamlit_authenticator as stauth
 import utils.auth as at
 from streamlit_authenticator.utilities.exceptions import LoginError
 
-main.config("", "Usuário")
 def login(authenticator):
     try:
         nome, authentication_status, username, nivel = authenticator.login(
@@ -41,6 +40,7 @@ def bory(nivel,authenticator):
 
 
 def main():
+    mains.config("", "Usuário")
     authenticator = at.initialize_session_state()
     nome, authentication_status, username, nivel = login(authenticator)
     men.menu(authenticator)

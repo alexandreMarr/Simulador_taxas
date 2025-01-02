@@ -1,0 +1,19 @@
+[[pages]]
+path = "login.py"
+name = "Simulador"
+icon = ":heavy_division_sign:"
+
+[[pages]]
+path = "paginas/Configurações.py"
+name = "Configurações"
+icon = ":gear:"
+
+[[pages]]
+path = "paginas/Users.py"
+name = "Users"
+icon = ":male-office-worker:"
+
+[[pages]]
+path = "paginas/Propostas.py"
+name = "Propostas"
+icon = ":page_facing_up:"

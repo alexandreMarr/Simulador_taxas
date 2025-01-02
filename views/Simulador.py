@@ -55,6 +55,7 @@ def simulador():
             if adiquirente_selecionado == 'Adiq':
                 st.write('Link de Pagamento:')
                 dados_do_banco_de_dados = confBD.carregar_dados_adiq()
+                print(dados_do_banco_de_dados)
                 tipo_taxa = ''
                 st.write()
                 link = st.checkbox("Ativo", False, key="link_pagamento_checkbox")
@@ -80,10 +81,11 @@ def simulador():
         spreads['CRÉDITO'] = st.number_input(f"Digite o spread para CRÉDITO:", min_value=0.0, key="credito_spread")
         spreads['7X a 12X'] = st.number_input(f"Digite o spread para 7x a 12x:", min_value=0.0, key="7x_12x_spread")
 
-    if (dados_do_banco_de_dados['Parcelamento'] == '13X a 18X').any():
+    if (dados_do_banco_de_dados['Parcelamento'] == '13X a 21X').any():
+        with col1:
+            spreads['13X a 21X'] = st.number_input(f"Digite o spread para 13x a 21x:", min_value=0.0, key="13x_21x_spread")
         with col2:
-            spreads['13X a 18X'] = st.number_input(f"Digite o spread para 13x a 18x:", min_value=0.0, key="13x_18x_spread")
-
+            spreads['22X a 24X'] = st.number_input(f"Digite o spread para 22x a 24x:", min_value=0.0, key="22x_24x_spread")
     parcelamentos = dados_do_banco_de_dados['Parcelamento'].unique()
     # Obtenha os parcelamentos selecionados
     parcelamentos_selecionados = [parcelamento for parcelamento, selecionado in controllerGlobal.exibir_checkboxes_parcelamentos(parcelamentos, unique_id="simulador_1").items() if selecionado]
@@ -102,8 +104,13 @@ def simulador():
     def modal_controller():
         controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais, desconto)
     
+    st.write(" ")
+    
     if st.button('Gerar Proposta',type='primary',key='simulador'):
         modal_controller()
+
+    if tipo_taxa == "SEM ANTECIPAÇÃO" and "13X a 21X" in parcelamentos_selecionados:
+        st.warning("#-Aceitamos a bandeira HiperCard com opção de parcelamento em até 20x no crédito.")
 
 
 
@@ -191,11 +198,15 @@ def simulador_Avançado():
         def modal_controller():
             controllerProposta.salvar(antecipacao, mcc_selecionado, taxas_finais,desconto)
         
+        st.write(" ")
         if st.button('Gerar Proposta',type='primary', key='simulador_avançados'):
             modal_controller()
         
     else:
         st.warning("Nenhum parcelamento selecionado.") 
+    
+    if tipo_taxa == "SEM ANTECIPAÇÃO" and "13X a 21X" in parcelamentos_selecionados:
+        st.warning("#Aceitamos a bandeira HiperCard com opção de parcelamento em até 20x no crédito.")
  
 
    

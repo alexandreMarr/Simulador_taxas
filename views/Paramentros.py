@@ -119,10 +119,11 @@ def Parametros_spreed_comercial():
     bandeiras_df = controllerGlobal.carregar_urls_das_bandeiras()
     bandeiras = spreads_comercial['bandeira'].unique()
     parcelamentos = spreads_comercial['parcelamento'].unique()
+    print(bandeiras)
     spreads = {}
 
     ordem_desejada_bandeira = ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX']
-    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 18X']
+    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 21X', '22X a 24X']
     bandeiras = [p for p in ordem_desejada_bandeira if p in bandeiras]
     parcelamentos = [p for p in ordem_desejada_parcelamento if p in parcelamentos]
 
@@ -138,15 +139,52 @@ def Parametros_spreed_comercial():
                 <img src="{url_imagem}" alt="{bandeira}" style="width:80px; height:60px; display: block; margin: 0 auto;">
             </div>
             ''', unsafe_allow_html=True)
-            
             for parcelamento in parcelamentos:
-                # Pular os inputs de HIPERCARD DÉBITO e AMEX DÉBITO
-                if (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or (bandeira == 'AMEX' and parcelamento == 'DÉBITO'):
-                    continue
+                # Determinar se o campo deve estar desabilitado
+                is_disabled = (
+                    (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or
+                    (bandeira == 'AMEX' and parcelamento == 'DÉBITO') or
+                    (bandeira in ['ELO', 'HIPERCARD', 'MASTERCARD'] and parcelamento == '22X a 24X')
+                )
+
                 spread_key = f"{bandeira}_{parcelamento}_spread"
-                valor_spread = spreads_comercial.loc[
-                 (spreads_comercial['bandeira'] == bandeira) & (spreads_comercial['parcelamento'] == parcelamento), 'spread'].item()
-                spreads[spread_key] = st.number_input(parcelamento, min_value=0.0, key=spread_key, value=valor_spread)
+
+                # Filtrar os dados correspondentes
+                spread_row = spreads_comercial.loc[
+                    (spreads_comercial['bandeira'] == bandeira) & 
+                    (spreads_comercial['parcelamento'] == parcelamento), 
+                    'spread'
+                ]
+
+                # Verificar se o resultado está vazio
+                if not spread_row.empty:
+                    valor_spread = spread_row.iloc[0]
+                else:
+                    valor_spread = 0.0  # Valor padrão caso não haja registro
+
+                if is_disabled:
+                    # HTML para tooltip
+                    tooltip_html = f"""
+                    <div style="position: relative; display: inline-block; margin-bottom: 10px;">
+                        <label> {parcelamento} </label>
+                        <br>
+                        <input type="text" value="Indisponível" disabled 
+                            style="width: 100px; text-align: center; cursor: not-allowed; color: #00000066; border-color: #00000000; -webkit-text-stroke-width: medium;">
+            
+                    </div>
+                    """
+                    st.markdown(tooltip_html, unsafe_allow_html=True)
+
+
+                else:
+                    # Exibir campo habilitado
+                    spreads[spread_key] = st.number_input(
+                        parcelamento, 
+                        min_value=0.0, 
+                        key=spread_key, 
+                        value=valor_spread
+                    )
+
         col_idx += 1
     valor_db_desconto = config.loc[0, "desconto"]
     desconto = st.number_input(f"Margem de Desconto", value=valor_db_desconto, min_value=0.0, key='vl_margem_desconto')

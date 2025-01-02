@@ -1,3 +1,4 @@
+from urllib.parse import quote
 import pandas as pd
 import psycopg2 
 import streamlit as st
@@ -37,16 +38,24 @@ def conectar_banco_de_dados():
     )
     return conn
 
-def conectar_banco_de_dados():
+def conectar_banco_de_dados_engine():
     """
-    Conecta ao banco de dados PostgreSQL.
-
-    Retorna:
-        Engine: Conexão com o banco de dados.
+    Conecta ao banco de dados PostgreSQL e testa a conexão.
     """
     load_dotenv()
     connection_string = f'postgresql://{os.getenv("DB_USERNAME")}:{os.getenv("DB_PASSWORD")}@{os.getenv("DB_HOST")}:5432/{os.getenv("DB_DATABASE")}'
-    return create_engine(connection_string)
+    engine = create_engine(connection_string)
+
+    # Testar a conexão
+    try:
+        with engine.connect() as connection_string:
+            print("Conexão bem-sucedida!")
+    except Exception as e:
+        print(f"Erro ao conectar: {e}")
+    
+    return engine
+
+print(f'Dados Banco de dados',{conectar_banco_de_dados_engine()})
 
 # Função para carregar os dados dos códigos MCC do banco de dados
 @st.cache_resource
@@ -58,7 +67,7 @@ def carregar_dados_mcc():
         DataFrame: DataFrame contendo os dados dos códigos MCC.
 
     """
-    conn = conectar_banco_de_dados()  # Função para conectar ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Função para conectar ao banco de dados
     query = "SELECT * FROM base_mcc_geral"  # Consulta SQL para selecionar todos os dados da tabela base_mcc_geral
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 
@@ -70,7 +79,7 @@ def carregar_dados_propostas():
         DataFrame: DataFrame contendo os dados dos códigos MCC.
 
     """
-    conn = conectar_banco_de_dados()  # Função para conectar ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Função para conectar ao banco de dados
     query = "SELECT * FROM propostas"  # Consulta SQL para selecionar todos os dados da tabela base_mcc_geral
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 
@@ -82,7 +91,7 @@ def carregar_dados_mdr_propostas():
         DataFrame: DataFrame contendo os dados dos códigos MCC.
 
     """
-    conn = conectar_banco_de_dados()  # Função para conectar ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Função para conectar ao banco de dados
     query = "SELECT * FROM mdr_propostas"  # Consulta SQL para selecionar todos os dados da tabela base_mcc_geral
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 
@@ -96,7 +105,7 @@ def carregar_dados_adiq():
         DataFrame: DataFrame contendo os dados da adquirente Adiq.
 
     """
-    conn = conectar_banco_de_dados()  # Função para conectar ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Função para conectar ao banco de dados
     query = "SELECT * FROM vw_mdr_adiq_up"  # Consulta SQL para selecionar todos os dados da view vw_mdr_adiq_up
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 
@@ -110,7 +119,7 @@ def carregar_dados_getnet():
         DataFrame: DataFrame contendo os dados da adquirente Getnet.
 
     """
-    conn = conectar_banco_de_dados()  # Função para conectar ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Função para conectar ao banco de dados
     query = "SELECT * FROM vw_mdr_getnet_up"  # Consulta SQL para selecionar todos os dados da view vw_mdr_getnet_up
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 
@@ -123,7 +132,7 @@ def carregar_dados_adiq_overprice():
     Returns:
         DataFrame: DataFrame contendo os dados da adquirente Adiq
     """
-    conn = conectar_banco_de_dados()  # Função para conectar ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Função para conectar ao banco de dados
     query = "SELECT * FROM vw_mdr_adiq_overprice_up"  # Consulta SQL para selecionar todos os dados da view vw_mdr_adiq_up
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 # Função para carregar os dados da relação MCC-CNAE do banco de dados
@@ -135,7 +144,7 @@ def carregar_dados_mcc_cnae():
     Returns:
         DataFrame: DataFrame contendo os dados da relação MCC-CNAE.
     """
-    conn = conectar_banco_de_dados()  # Conecta ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Conecta ao banco de dados
     query = "SELECT * FROM mcc_cnae"  # Consulta SQL para selecionar todos os dados da tabela mcc_cnae
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 
@@ -147,10 +156,9 @@ def carregar_dados_config():
     Returns:
         DataFrame: DataFrame contendo os dados de configuração.
     """
-    conn = conectar_banco_de_dados()  # Conecta ao banco de dados
+    engine = conectar_banco_de_dados_engine()  # Conecta ao banco de dados usando SQLAlchemy
     query = "SELECT * FROM config"  # Consulta SQL para selecionar todos os dados da tabela config
-    return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
-
+    return pd.read_sql(query, engine)  # Retorna os dados como DataFrame
 
 def carregar_dados_spread_comercial():
     """
@@ -159,7 +167,7 @@ def carregar_dados_spread_comercial():
     Returns:
         DataFrame: DataFrame contendo os dados de configuração.
     """
-    conn = conectar_banco_de_dados()  # Conecta ao banco de dados
+    conn = conectar_banco_de_dados_engine()  # Conecta ao banco de dados
     query = "SELECT * FROM spread_comercial"  # Consulta SQL para selecionar todos os dados da tabela config
     return pd.read_sql(query, conn)  # Retorna os dados como DataFrame
 

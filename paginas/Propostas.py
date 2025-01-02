@@ -3,7 +3,7 @@ import random
 import streamlit as st
 from controllers import controllerGlobal, controllerProposta
 import utils.sidebar as men
-import utils.main as main
+import utils.main as mains
 from views.Paramentros import paramentros, Parametros_spreed_comercial
 from views.Atualização_de_Base import update
 from views.Tabela_de_Taxas import tabela_de_taxas
@@ -14,7 +14,6 @@ from streamlit_authenticator.utilities.exceptions import LoginError
 import utils.conexaoBD as confBD
 import time
 
-main.config("wide", "Propostas")
 def login(authenticator):
     try:
         nome, authentication_status, username, nivel = authenticator.login(
@@ -29,7 +28,7 @@ def bory(nivel, name):
     
     st.header('Propostas', divider='blue')
 
-    col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
+    col1, col2, col3, col4,col5 = st.columns([2, 2, 2, 2, 2])
     filtros = {}
     propostas_db = confBD.carregar_dados_propostas()
     
@@ -50,13 +49,19 @@ def bory(nivel, name):
     if nivel == 'user':
         filtros['nome_executivo'] = ''
         with col3:
-            filtros['data_geracao'] = st.date_input("Data Geração:",value=None, format='DD/MM/YYYY')
+            filtros['data_inicio'] = st.date_input("Data Início:", value=None, format='DD/MM/YYYY', key="data_inicio")
+        with col4:
+            filtros['data_fim'] = st.date_input("Data Fim:", value=None, format='DD/MM/YYYY', key="data_fim")
+
     else:
         with col3:
             filtros['nome_executivo'] = st.multiselect("Executivo:", sorted(propostas_filtradas['nome_executivo'].unique()), placeholder="Executivo", key="execuivo")
 
         with col4:
-            filtros['data_geracao'] = st.date_input("Data Geração:",value=None, format='DD/MM/YYYY')
+            filtros['data_inicio'] = st.date_input("Data Início:", value=None, format='DD/MM/YYYY', key="data_inicio")
+        with col5:
+            filtros['data_fim'] = st.date_input("Data Fim:", value=None, format='DD/MM/YYYY', key="data_fim")
+
 
     st.divider()
     
@@ -89,6 +94,7 @@ def bory(nivel, name):
 
 
 def main():
+    mains.config("wide", "Propostas")
     authenticator = at.initialize_session_state()
     nome, authentication_status, username, nivel = login(authenticator)
     men.menu(authenticator)

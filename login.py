@@ -3,8 +3,8 @@ import re
 import streamlit as st
 from controllers import controllerProposta
 from controllers import controllerGlobal
-import utils.sidebar as men
 import utils.main as mains
+import utils.sidebar as men
 from views.Simulador import simulador, simulador_Avançado
 from views.Simulador_executivos import simulador_comercial
 from views.Tabela_de_Taxas import tabela_de_taxas
@@ -48,7 +48,7 @@ def main():
     authenticator = at.initialize_session_state()
     nome, authentication_status, username, nivel = login(authenticator)
     men.menu(authenticator)
-
+   
     if authentication_status:
         inicial_bar(nivel)
         controllerGlobal.footer()
@@ -61,5 +61,6 @@ at.update_config()
 
 if __name__ == "__main__":
     main()
+
 
 

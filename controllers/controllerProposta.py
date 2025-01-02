@@ -73,7 +73,7 @@ def salvar(antecipacao, mcc_selecionado, taxas_finais, desconto):
            
 def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade, username, antecipacao, mcc, pivot_table_styler,col2,obs,desconto):
      # Conectar ao banco de dados
-     engine = confBD.conectar_banco_de_dados()
+     engine = confBD.conectar_banco_de_dados_engine()
      Session = sessionmaker(bind=engine)
      session = Session()
    
@@ -91,7 +91,8 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
                        Column('data_vencimento', String),
                        Column('nome_executivo', String),
                        Column('observacao', Text),
-                       Column('desconto', Boolean))
+                       Column('desconto', Boolean),
+                       Column('mcc', Text))
    
      # Definir a tabela mdr_propostas
      mdr_propostas = SQLTable('mdr_propostas', metadata,
@@ -110,13 +111,13 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
    
      # Carregar o DataFrame de bandeiras para mapear URLs de volta para os nomes das bandeiras
      bandeiras_df = pd.DataFrame({
-         'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
+         'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX'],
          'URL_IMAGEM': [
              f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
              f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
              f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
-             f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
-             f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
+             f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png',
+             f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png'
          ]
      })
      # Substituir URLs de volta pelos nomes das bandeiras
@@ -161,7 +162,8 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
              data_vencimento=data_validade,
              nome_executivo=username,
              observacao=obs,
-             desconto=desconto
+             desconto=desconto,
+             mcc=mcc
          )
        
          # Executar a inserção e obter o ID da nova proposta
@@ -208,8 +210,9 @@ def salvar_proposta(razao_social, cnpj, aluguel, pix, data_atual, data_validade,
          'taxa_antecipacao': taxa_antecipacao,
          'tipo_taxa_antecipacao': tipo_taxa_antecipacao
      }
+
    # Gere o PDF e obtenha o buffer
-     pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table,username,obs,desconto)
+     pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table,username,obs,desconto,mcc)
     
      with col2:
         # Exiba o PDF no Streamlit
@@ -236,7 +239,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib import colors
 
 
-def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
+def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto, mcc):
     # Carregar o papel timbrado
     papel_timbrado_path = 'Papel Timbrado - Rovema Bank.pdf'
     papel_timbrado = PdfReader(papel_timbrado_path)
@@ -254,12 +257,12 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
 
     # Adiciona informações no PDF
     c.setFont("OpenSans", 12)
-    c.drawString(132, height - 163, username)
-    c.drawString(117, height - 197.8, dados_cliente['razao_social'])
+    c.drawString(132, height - 161, username)
+    c.drawString(117, height - 197.4, dados_cliente['razao_social'])
     c.drawString(108, height - 233, dados_cliente['cnpj'])
     aluguel_str = f"R$ {taxas['aluguel']:.2f}"
     c.drawString(390, height - 231, aluguel_str)
-    
+    c.drawString(426, height - 161, mcc)
     if obs:
         # Estilo para o parágrafo de observações
         styles = getSampleStyleSheet()
@@ -301,6 +304,8 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
         c.setFillColor(colors.rgb2cmyk(255,0,0))
         c.drawString(155, height - 646, 'Desconto exclusivo válido até a data de vencimento da proposta.')
     
+    
+    
     c.setFillColor(colors.white)
     # Desenhar strings com a cor branca
     c.drawString(389, height - 103, dados_cliente['data_geracao'])
@@ -313,23 +318,36 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
          'MASTERCARD': f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
             'VISA': f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
             'ELO':   f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
-            'AMEX': f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
-            'HIPERCARD':  f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
+            'HIPERCARD':  f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png',
+            'AMEX': f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png'
     }
     
-            
-
     # Preparar os dados da tabela sem adicionar o cabeçalho textual
     data = pivot_table.reset_index().values.tolist()
 
     # Inserir as imagens das bandeiras na primeira linha
     bandeira_imgs = [ReportLabImage(BytesIO(requests.get(bandeira_imagens[bandeira]).content), width=50, height=30) for bandeira in bandeira_imagens.keys()]
     data.insert(0, [''] + bandeira_imgs)
-
+    # found = any("13X a 21X" in sublist for sublist in data)
+    # if found:
+    #     data[5][4] = f"* {data[5][4]}"  # Adiciona '*' na linha 3 (índice 3) e coluna 4 (índice 4)
+   
     # Criar a tabela no PDF
     col_count = len(bandeira_imagens) + 1
     table = Table(data, colWidths=[16.8 * 28.35 / col_count] * col_count, hAlign='CENTER')
+    
+    # Verifica se o data contem o tipo de taxa 13x a 21x
+    found = any("13X a 21X" in sublist for sublist in data)
+    if found:
+        table.setStyle(TableStyle([
+            # Define a cor laranja para a taxa hipercard de 13x a 21x
+            ('TEXTCOLOR', (4, 5), (4, 5), colors.HexColor('#ff914d')),  # Define a cor do texto como laranja
+            ('FONTNAME', (4, 3), (4, 3), 'OpenSans'),
+        ]))
+        c.setFillColor(colors.HexColor('#ff914d'))
+        c.drawString(55, height - 600, '# Aceitamos a bandeira HiperCard com opção de parcelamento em até 20x no crédito.')
 
+    
     # Estilizar a tabela
     table.setStyle(TableStyle([
     # Define a cor de fundo da primeira linha (cabeçalho)
@@ -347,14 +365,13 @@ def gerar_pdf(dados_cliente, taxas, pivot_table, username,obs,desconto):
     # Define a cor de fundo da primeira coluna
     ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#F1F1F1')),
     
-    
     # Outras configurações
     ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
-
+    
     # Adicionar a tabela ao canvas
     table.wrapOn(c, width, height)
-    table.drawOn(c, 50, height - 550)  # Posicione a tabela conforme necessário
+    table.drawOn(c, 60, height - 550)  # Posicione a tabela conforme necessário
 
     # Salvar e fechar a canvas
     c.save()
@@ -412,11 +429,21 @@ def carregar_tabela(filtros, dataset, nivel, name):
     if filtros['nome_executivo']:
         dataset = dataset[dataset['nome_executivo'].isin(filtros['nome_executivo'])]
 
-    if filtros['data_geracao']:
-        # Convertendo a data para o formato yyyy/mm/dd
-        data_geracao_str = filtros['data_geracao'].strftime('%Y-%m-%d')
+    # Filtra por intervalo de datas de geração
+    if filtros.get('data_inicio') and filtros.get('data_fim'):
+        data_inicio_str = filtros['data_inicio'].strftime('%Y-%m-%d')
+        data_fim_str = filtros['data_fim'].strftime('%Y-%m-%d')
+        dataset = dataset[
+            (dataset['data_geracao'] >= data_inicio_str) &
+            (dataset['data_geracao'] <= data_fim_str)
+        ]
+    elif filtros.get('data_inicio'):  # Apenas data de início fornecida
+        data_inicio_str = filtros['data_inicio'].strftime('%Y-%m-%d')
+        dataset = dataset[dataset['data_geracao'] >= data_inicio_str]
+    elif filtros.get('data_fim'):  # Apenas data de fim fornecida
+        data_fim_str = filtros['data_fim'].strftime('%Y-%m-%d')
+        dataset = dataset[dataset['data_geracao'] <= data_fim_str]
 
-        dataset = dataset[dataset['data_geracao'] == data_geracao_str]
 
     dataset = dataset.reset_index(drop=True)
 
@@ -521,13 +548,13 @@ def buscar_dados_pdf(id):
             
              # Carregar o DataFrame de bandeiras para mapear URLs de volta para os nomes das bandeiras
             bandeiras_df = pd.DataFrame({
-                'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'AMEX', 'HIPERCARD'],
+                'BANDEIRA': ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD','AMEX'],
                 'URL_IMAGEM': [
                      f'{os.getenv("URL_SERVER_IMAGENS")}/master.png',
                      f'{os.getenv("URL_SERVER_IMAGENS")}/visa.png',
                      f'{os.getenv("URL_SERVER_IMAGENS")}/elo.png',
-                     f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png',
-                     f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png'
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/hiper.png',
+                     f'{os.getenv("URL_SERVER_IMAGENS")}/amex.png'
             ]
             })
             # Substituir URLs de volta pelos nomes das bandeiras
@@ -570,9 +597,10 @@ def buscar_dados_pdf(id):
                 'tipo_taxa_antecipacao': proposta.iloc[0]['tipo_taxa_antecipacao'],
             }
             obs = proposta.iloc[0]['observacao']
+            mcc = proposta.iloc[0]['mcc']
             
             # Gerar PDF com dados
-            pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table, proposta.iloc[0]['nome_executivo'], obs,desconto)
+            pdf_buffer = gerar_pdf(dados_cliente, taxas, pivot_table, proposta.iloc[0]['nome_executivo'], obs,desconto,mcc)
             
             return st.download_button(
                     label="Baixar PDF",

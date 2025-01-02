@@ -5,7 +5,6 @@ import os
 from dotenv import load_dotenv
 
 # Função para carregar os URLs das imagens das bandeiras de cartão de crédito
-@st.cache_resource
 def carregar_urls_das_bandeiras():
     load_dotenv()
     """
@@ -30,8 +29,7 @@ def carregar_urls_das_bandeiras():
 
     return pd.DataFrame(data)  # Retorna os dados como DataFrame
 
-# Função para formatar uma tabela pivot
-@st.cache_resource
+
 def formatacao_pivot(pivot_table):
     """
     Realiza a formatação de uma tabela pivot.
@@ -53,7 +51,7 @@ def formatacao_pivot(pivot_table):
     pivot_table = pivot_table.reindex(columns=ordem_desejada)
     
     # Ordem das Linhas de Parcelamento
-    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X','13X a 18X']
+    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 21X', '22X a 24X']
     ordem_desejada_parcelamento = [parcelamento for parcelamento in ordem_desejada_parcelamento if parcelamento in pivot_table.index]
     
     # Reordenar as linhas de acordo com a ordem desejada
@@ -70,12 +68,15 @@ def formatacao_pivot(pivot_table):
         else:
             return elemento
 
+    # Adicionar '*' na célula específica (13X a 21X, HIPERCARD)
+    if "13X a 21X" in pivot_table.index and "HIPERCARD" in pivot_table.columns:
+        valor_original = pivot_table.at["13X a 21X", "HIPERCARD"]
+        pivot_table.at["13X a 21X", "HIPERCARD"] = f"#{valor_original:.2f}%"  # Formata com duas casas decimais e adiciona '#'
+    
     # Aplicar a formatação à tabela
-    pivot_table_formatada = pivot_table.map(formatar_percentagem)
+    pivot_table_formatada = pivot_table.applymap(formatar_percentagem)
     
-    # Carregar os URLs das imagens das bandeiras
     bandeiras_df = carregar_urls_das_bandeiras()
-    
     
     # Substituir os nomes das bandeiras pelos URLs das imagens na pivot table
     for bandeira in pivot_table_formatada.columns:
@@ -84,20 +85,24 @@ def formatacao_pivot(pivot_table):
             url_imagem = bandeiras_df[bandeiras_df['BANDEIRA'] == bandeira]['URL_IMAGEM'].iloc[0]
             # Substitui o nome da bandeira pelo HTML da imagem na tabela pivot
             pivot_table_formatada.rename(columns={bandeira: f'<img src="{url_imagem}" alt="{bandeira}" style="width:70px;height:40px; text-align: center;">'}, inplace=True)
-    
-    # Aplicar display: flex ao estilo do DataFrame para melhorar a apresentação
-    styles = [
-        dict(selector="", props=[("display", "ruby-text"), ("flex-wrap", "wrap"), ("justify-content", "center"), ("border-collapse", "unset")]),
-    ]
-    pivot_table_formatada = pivot_table_formatada.style.set_table_styles(styles)
-   
-    return pivot_table_formatada
 
+    # Estilo condicional para a célula "13X a 21X" da coluna "HIPERCARD"
+    def estilo_condicional(val):
+        # Se o valor for uma string começando com '#', colorir de laranja
+        if isinstance(val, str) and val.startswith('#'):
+            return 'background-color: #ffffff; color: #ff6100;'  # Define fundo laranja para valores formatados
+        return ''  # Sem alteração para outros valores
+
+    # Aplicar o estilo à tabela
+    pivot_table_formatada = pivot_table_formatada.style.applymap(estilo_condicional)
+
+    # Retornar a tabela formatada
+    return pivot_table_formatada
 
 
 def exibir_bandeiras_com_inputs(bandeiras, parcelamentos, bandeiras_df, spreads):
     ordem_desejada_bandeira = ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX']
-    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 18X']
+    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 21X', '22X a 24X']
     bandeiras = [p for p in ordem_desejada_bandeira if p in bandeiras]
     parcelamentos = [p for p in ordem_desejada_parcelamento if p in parcelamentos]
     
@@ -122,28 +127,44 @@ def exibir_bandeiras_com_inputs(bandeiras, parcelamentos, bandeiras_df, spreads)
             
             for parcelamento in parcelamentos:
                 # Pular os inputs de HIPERCARD DÉBITO e AMEX DÉBITO
-                if (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or (bandeira == 'AMEX' and parcelamento == 'DÉBITO'):
-                    continue
-                spread_key = f"{bandeira}_{parcelamento}_spread"
-                spreads[spread_key] = st.number_input(parcelamento, min_value=0.0, key=spread_key)
+                is_disabled = (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or \
+                              (bandeira == 'AMEX' and parcelamento == 'DÉBITO') or \
+                              (bandeira in ['ELO', 'HIPERCARD', 'MASTERCARD'] and parcelamento == '22X a 24X')
+                
+                if is_disabled:
+                    # HTML para tooltip
+                    tooltip_html = f"""
+                    <div style="position: relative; display: inline-block; margin-bottom: 10px;">
+                        <label> {parcelamento} </label>
+                        <br>
+                        <input type="text" value="Indisponível" disabled 
+                            style="width: 100px; text-align: center; cursor: not-allowed; color: #00000066; border-color: #00000000; -webkit-text-stroke-width: medium;">
+            
+                    </div>
+                    """
+                    st.markdown(tooltip_html, unsafe_allow_html=True)
+
+
+                else:
+                    spread_key = f"{bandeira}_{parcelamento}_spread"
+                    spreads[spread_key] = st.number_input(parcelamento, min_value=0.0, key=spread_key)
         col_idx += 1
 
     st.write("")
+    
 
-
-def exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos, bandeiras_df, spreads,check_desconto):
+def exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos, bandeiras_df, spreads, check_desconto):
     ordem_desejada_bandeira = ['MASTERCARD', 'VISA', 'ELO', 'HIPERCARD', 'AMEX']
-    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 18X']
+    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 21X', '22X a 24X']
     bandeiras = [p for p in ordem_desejada_bandeira if p in bandeiras]
     parcelamentos = [p for p in ordem_desejada_parcelamento if p in parcelamentos]
     config = confBD.carregar_dados_config()
     
-    
     # Inicializar todas as chaves no dicionário spreads com valor padrão
     for bandeira in bandeiras:
-            for parcelamento in parcelamentos:
-                spread_key = f"{bandeira}_{parcelamento}_spreads"
-                spreads.setdefault(spread_key, 0.00)  # Use setdefault para evitar KeyError
+        for parcelamento in parcelamentos:
+            spread_key = f"{bandeira}_{parcelamento}_spreads"
+            spreads.setdefault(spread_key, 0.00)
 
     cols = st.columns(5)
     col_idx = 0
@@ -156,23 +177,39 @@ def exibir_bandeiras_com_inputs_executivos(bandeiras, parcelamentos, bandeiras_d
                 <img src="{url_imagem}" alt="{bandeira}" style="width:80px; height:60px; display: block; margin: 0 auto;">
             </div>
             ''', unsafe_allow_html=True)
-            
+
             for parcelamento in parcelamentos:
-                # Pular os inputs de HIPERCARD DÉBITO e AMEX DÉBITO
-                if (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or (bandeira == 'AMEX' and parcelamento == 'DÉBITO'):
-                    continue
-                spread_key = f"{bandeira}_{parcelamento}_spreads"
-                if check_desconto == True:
-                    spreads[spread_key] = st.number_input(parcelamento,value=0.0, min_value=-config.loc[0, "desconto"], key=spread_key)
+                # Identificar casos desabilitados
+                is_disabled = (bandeira == 'HIPERCARD' and parcelamento == 'DÉBITO') or \
+                              (bandeira == 'AMEX' and parcelamento == 'DÉBITO') or \
+                              (bandeira in ['ELO', 'HIPERCARD', 'MASTERCARD'] and parcelamento == '22X a 24X')
+                if is_disabled:
+                    # HTML para tooltip
+                    tooltip_html = f"""
+                    <div style="position: relative; display: inline-block; margin-bottom: 10px;">
+                        <label> {parcelamento} </label>
+                        <br>
+                        <input type="text" value="Indisponível" disabled 
+                            style="width: 100px; text-align: center; cursor: not-allowed; color: #00000066; border-color: #00000000; -webkit-text-stroke-width: medium;">
+            
+                    </div>
+                    """
+                    st.markdown(tooltip_html, unsafe_allow_html=True)
+    
                 else:
-                    spreads[spread_key] = st.number_input(parcelamento, value=0.0, min_value=0.00, key=spread_key)
+                    spread_key = f"{bandeira}_{parcelamento}_spreads"
+                    if check_desconto:
+                        spreads[spread_key] = st.number_input(parcelamento, value=0.0, min_value=-config.loc[0, "desconto"], key=spread_key)
+                    else:
+                        spreads[spread_key] = st.number_input(parcelamento, value=0.0, min_value=0.00, key=spread_key)
         col_idx += 1
 
     st.write("")
 
+
 def exibir_checkboxes_parcelamentos(parcelamentos,  unique_id=""):
     checkboxes = {}
-    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 18X']
+    ordem_desejada_parcelamento = ['DÉBITO', 'CRÉDITO', '2X a 6X', '7X a 12X', '13X a 21X', '22X a 24X']
     parcelamentos = [p for p in ordem_desejada_parcelamento if p in parcelamentos]
     
     cols = st.columns(len(parcelamentos))
