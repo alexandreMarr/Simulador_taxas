@@ -56,4 +56,10 @@ table {
     border-radius: 0.5rem;
     padding: calc(1em - 1px);
     width: 500px;
+    align-items: center !important;
+}
+
+
+[class="st-emotion-cache-611ozf e1f1d6gn2"] {
+    align-items: center !important;
 }
